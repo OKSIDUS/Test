@@ -1,4 +1,9 @@
 
+using ProzorroAnalytics.Application.Interfaces.Repositories;
+using ProzorroAnalytics.Application.Interfaces.Services;
+using ProzorroAnalytics.Application.Services;
+using ProzorroAnalytics.Infrastructure.Repositories;
+
 namespace ProzorroAnalytics.API
 {
     public class Program
@@ -13,6 +18,14 @@ namespace ProzorroAnalytics.API
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            //Infrastructure
+            builder.Services.AddScoped<IImportRepository, ProzorroRepository>();
+            builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+
+            //Application
+            builder.Services.AddScoped<IImportService, ImportService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
             var app = builder.Build();
 

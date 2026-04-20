@@ -11,4 +11,9 @@
     <ProjectReference Include="..\ProzorroAnalytics.Domain\ProzorroAnalytics.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Entities\" />
+    <Folder Include="Persistence\" />
+  </ItemGroup>
+
 </Project>

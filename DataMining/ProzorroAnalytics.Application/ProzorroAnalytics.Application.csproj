@@ -10,4 +10,8 @@
     <ProjectReference Include="..\ProzorroAnalytics.Domain\ProzorroAnalytics.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\" />
+  </ItemGroup>
+
 </Project>
