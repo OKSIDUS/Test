@@ -1,7 +1,10 @@
 
+using ProzorroAnalytics.Application.Interfaces.Http;
 using ProzorroAnalytics.Application.Interfaces.Repositories;
 using ProzorroAnalytics.Application.Interfaces.Services;
 using ProzorroAnalytics.Application.Services;
+using ProzorroAnalytics.Infrastructure.ApiClients;
+using ProzorroAnalytics.Infrastructure.Configuration;
 using ProzorroAnalytics.Infrastructure.Repositories;
 
 namespace ProzorroAnalytics.API
@@ -22,6 +25,17 @@ namespace ProzorroAnalytics.API
             //Infrastructure
             builder.Services.AddScoped<IImportRepository, ProzorroRepository>();
             builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+
+            var prozorroOptions = builder.Configuration
+                .GetSection(ProzorroApiOptions.SectionName)
+                .Get<ProzorroApiOptions>()!;
+
+            builder.Services.AddHttpClient<IProzorroApiClient, ProzorroApiClient>(client =>
+            {
+                client.BaseAddress = new Uri(prozorroOptions.BaseUrl);
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.Timeout = TimeSpan.FromSeconds(prozorroOptions.TimeoutSeconds);
+            });
 
             //Application
             builder.Services.AddScoped<IImportService, ImportService>();
