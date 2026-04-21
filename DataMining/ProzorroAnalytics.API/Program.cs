@@ -2,6 +2,7 @@
 using ProzorroAnalytics.Application.Interfaces.Http;
 using ProzorroAnalytics.Application.Interfaces.Repositories;
 using ProzorroAnalytics.Application.Interfaces.Services;
+using ProzorroAnalytics.Application.Options;
 using ProzorroAnalytics.Application.Services;
 using ProzorroAnalytics.Infrastructure.ApiClients;
 using ProzorroAnalytics.Infrastructure.Configuration;
@@ -38,8 +39,13 @@ namespace ProzorroAnalytics.API
             });
 
             //Application
+            var tenderFilters = builder.Configuration
+                .GetSection("TenderFilter")
+                .Get<FilterOptions>()!;
+            builder.Services.AddSingleton(tenderFilters);
             builder.Services.AddScoped<IImportService, ImportService>();
             builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+
 
             var app = builder.Build();
 
