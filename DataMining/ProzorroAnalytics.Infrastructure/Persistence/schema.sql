@@ -31,10 +31,15 @@ CREATE TABLE IF NOT EXISTS tender_contracts (
     tender_id           TEXT        NOT NULL REFERENCES tenders (id) ON DELETE CASCADE,
     prozorro_id         TEXT        NOT NULL,
     contract_amount     NUMERIC(18, 2),
+    buyer_name          TEXT        NOT NULL DEFAULT '',
+    initial_budget      NUMERIC(18, 2),
     UNIQUE (tender_id, prozorro_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_contracts_tender_id ON tender_contracts (tender_id);
+CREATE INDEX IF NOT EXISTS idx_contracts_analytics
+    ON tender_contracts (buyer_name) INCLUDE (contract_amount, initial_budget);
+CREATE INDEX IF NOT EXISTS idx_contracts_tender_id
+    ON tender_contracts (tender_id);
 
 
 
@@ -45,7 +50,7 @@ CREATE TABLE IF NOT EXISTS tender_suppliers (
     UNIQUE (tender_id, supplier_name)
 );
 
-CREATE INDEX IF NOT EXISTS idx_suppliers_tender_id     ON tender_suppliers (tender_id);
+CREATE INDEX IF NOT EXISTS idx_suppliers_tender_id     ON tender_suppliers (tender_id) INCLUDE (supplier_name);
 CREATE INDEX IF NOT EXISTS idx_suppliers_supplier_name ON tender_suppliers (supplier_name);
 
 

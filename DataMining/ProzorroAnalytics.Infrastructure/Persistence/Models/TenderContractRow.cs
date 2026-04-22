@@ -6,4 +6,6 @@ public class TenderContractRow
     public string TenderId { get; init; } = null!;
     public string ProzorroId { get; init; } = null!;
     public decimal? ContractAmount { get; init; }
+    public string BuyerName { get; init; } = string.Empty;
+    public decimal? InitialBudget { get; init; }
 }

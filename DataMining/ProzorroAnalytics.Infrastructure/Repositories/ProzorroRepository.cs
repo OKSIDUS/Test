@@ -84,19 +84,24 @@ public class ProzorroRepository(DbConnectionFactory connectionFactory) : IImport
     private static async Task UpsertContractsAsync(
         System.Data.IDbConnection conn, System.Data.IDbTransaction tx, Tender tender)
     {
+        var buyerName = tender.ProcuringEntity?.Name ?? string.Empty;
+        var initialBudget = tender.Value?.Amount;
+
         foreach (var contract in tender.Contracts)
         {
             await conn.ExecuteAsync(
                 """
-                INSERT INTO tender_contracts (tender_id, prozorro_id, contract_amount)
-                VALUES (@TenderId, @ProzorroId, @ContractAmount)
+                INSERT INTO tender_contracts (tender_id, prozorro_id, contract_amount, buyer_name, initial_budget)
+                VALUES (@TenderId, @ProzorroId, @ContractAmount, @BuyerName, @InitialBudget)
                 ON CONFLICT (tender_id, prozorro_id) DO NOTHING
                 """,
                 new
                 {
                     TenderId = tender.Id,
                     ProzorroId = contract.Id,
-                    ContractAmount = contract.Value?.Amount
+                    ContractAmount = contract.Value?.Amount,
+                    BuyerName = buyerName,
+                    InitialBudget = initialBudget
                 },
                 tx);
         }
