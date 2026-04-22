@@ -2,7 +2,7 @@
 {
     public class FilterOptions
     {
-        public string TargetCpv { get; init; }
-        public string TargetStatus { get; init; } 
+        public required string TargetCpv { get; init; }
+        public required string TargetStatus { get; init; }
     }
 }

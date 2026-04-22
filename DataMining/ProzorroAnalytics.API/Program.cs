@@ -1,5 +1,7 @@
 
 using System.Threading.RateLimiting;
+using Dapper;
+using ProzorroAnalytics.API.BackgroundServices;
 using ProzorroAnalytics.Application.Interfaces.Http;
 using ProzorroAnalytics.Application.Interfaces.Repositories;
 using ProzorroAnalytics.Application.Interfaces.Services;
@@ -8,6 +10,8 @@ using ProzorroAnalytics.Application.Services;
 using ProzorroAnalytics.Infrastructure.ApiClients;
 using ProzorroAnalytics.Infrastructure.Configuration;
 using ProzorroAnalytics.Infrastructure.Http;
+using ProzorroAnalytics.Infrastructure.Jobs;
+using ProzorroAnalytics.Infrastructure.Persistence;
 using ProzorroAnalytics.Infrastructure.Repositories;
 
 namespace ProzorroAnalytics.API
@@ -16,6 +20,8 @@ namespace ProzorroAnalytics.API
     {
         public static void Main(string[] args)
         {
+            DefaultTypeMap.MatchNamesWithUnderscores = true;
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
@@ -26,6 +32,9 @@ namespace ProzorroAnalytics.API
             builder.Services.AddSwaggerGen();
 
             //Infrastructure
+            var connectionString = builder.Configuration.GetConnectionString("Postgres")!;
+            builder.Services.AddSingleton(new DbConnectionFactory(connectionString));
+
             builder.Services.AddScoped<IImportRepository, ProzorroRepository>();
             builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 
@@ -33,15 +42,16 @@ namespace ProzorroAnalytics.API
                 .GetSection(ProzorroApiOptions.SectionName)
                 .Get<ProzorroApiOptions>()!;
 
-            builder.Services.AddSingleton<RateLimitingHandler>(_ =>
-                new RateLimitingHandler(new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+            builder.Services.AddSingleton<RateLimiter>(_ =>
+                new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
                 {
                     TokenLimit = prozorroOptions.BurstSize,
                     ReplenishmentPeriod = TimeSpan.FromSeconds(1),
                     TokensPerPeriod = prozorroOptions.RequestsPerSecond,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                     QueueLimit = prozorroOptions.QueueLimit,
-                })));
+                }));
+            builder.Services.AddTransient<RateLimitingHandler>();
 
             builder.Services.AddHttpClient<IProzorroApiClient, ProzorroApiClient>(client =>
             {
@@ -57,6 +67,12 @@ namespace ProzorroAnalytics.API
             builder.Services.AddSingleton(tenderFilters);
             builder.Services.AddScoped<IImportService, ImportService>();
             builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+
+            builder.Services.AddSingleton<IImportJobQueue, ImportJobQueue>();
+            builder.Services.Configure<NightlyImportOptions>(
+                builder.Configuration.GetSection(NightlyImportOptions.SectionName));
+            builder.Services.AddHostedService<ImportWorkerService>();
+            builder.Services.AddHostedService<NightlyImportService>();
 
 
             var app = builder.Build();
