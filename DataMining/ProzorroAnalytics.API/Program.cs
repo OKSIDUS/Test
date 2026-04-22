@@ -1,4 +1,5 @@
 
+using System.Threading.RateLimiting;
 using ProzorroAnalytics.Application.Interfaces.Http;
 using ProzorroAnalytics.Application.Interfaces.Repositories;
 using ProzorroAnalytics.Application.Interfaces.Services;
@@ -6,6 +7,7 @@ using ProzorroAnalytics.Application.Options;
 using ProzorroAnalytics.Application.Services;
 using ProzorroAnalytics.Infrastructure.ApiClients;
 using ProzorroAnalytics.Infrastructure.Configuration;
+using ProzorroAnalytics.Infrastructure.Http;
 using ProzorroAnalytics.Infrastructure.Repositories;
 
 namespace ProzorroAnalytics.API
@@ -31,12 +33,22 @@ namespace ProzorroAnalytics.API
                 .GetSection(ProzorroApiOptions.SectionName)
                 .Get<ProzorroApiOptions>()!;
 
+            builder.Services.AddSingleton<RateLimitingHandler>(_ =>
+                new RateLimitingHandler(new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = prozorroOptions.BurstSize,
+                    ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+                    TokensPerPeriod = prozorroOptions.RequestsPerSecond,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = prozorroOptions.QueueLimit,
+                })));
+
             builder.Services.AddHttpClient<IProzorroApiClient, ProzorroApiClient>(client =>
             {
                 client.BaseAddress = new Uri(prozorroOptions.BaseUrl);
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 client.Timeout = TimeSpan.FromSeconds(prozorroOptions.TimeoutSeconds);
-            });
+            }).AddHttpMessageHandler<RateLimitingHandler>();
 
             //Application
             var tenderFilters = builder.Configuration
