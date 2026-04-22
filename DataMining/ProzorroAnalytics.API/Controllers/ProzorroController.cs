@@ -8,10 +8,12 @@ namespace ProzorroAnalytics.API.Controllers;
 public class ProzorroController : ControllerBase
 {
     private readonly IImportJobQueue _importJobQueue;
+    private readonly IAnalyticsService _analyticsService;
 
-    public ProzorroController(IImportJobQueue importJobQueue)
+    public ProzorroController(IImportJobQueue importJobQueue, IAnalyticsService analyticsService)
     {
         _importJobQueue = importJobQueue;
+        _analyticsService = analyticsService;
     }
 
     [HttpPost("import-tenders")]
@@ -23,5 +25,12 @@ public class ProzorroController : ControllerBase
             return Conflict(new { message = "An import job is already queued or running." });
 
         return Accepted(new { message = "Import job enqueued." });
+    }
+
+    [HttpGet("analytics")]
+    public async Task<IActionResult> GetDashboard(CancellationToken ct)
+    {
+        var dashboard = await _analyticsService.GetDashboardAsync(ct);
+        return Ok(dashboard);
     }
 }
