@@ -1,6 +1,6 @@
-﻿namespace ProzorroAnalytics.Application.Interfaces.Services
+﻿namespace ProzorroAnalytics.Application.Interfaces.Services;
+
+public interface IImportService
 {
-    public interface IImportService
-    {
-    }
+    Task ImportTendersAsync(CancellationToken ct = default);
 }

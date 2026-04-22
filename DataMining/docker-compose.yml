@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: prozorro
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./ProzorroAnalytics.Infrastructure/Persistence/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d prozorro"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: ProzorroAnalytics.API/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=prozorro;Username=postgres;Password=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
