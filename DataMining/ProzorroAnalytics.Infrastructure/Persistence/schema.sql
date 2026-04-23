@@ -55,6 +55,32 @@ CREATE INDEX IF NOT EXISTS idx_suppliers_supplier_name ON tender_suppliers (supp
 
 
 -- ============================================================
+-- Pre-aggregated analytics tables (refreshed at end of each import)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS analytics_summary (
+    id              INT            PRIMARY KEY DEFAULT 1,
+    total_savings   NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    last_updated_at TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CONSTRAINT analytics_single_row CHECK (id = 1)
+);
+INSERT INTO analytics_summary (id) VALUES (1) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS analytics_buyers (
+    buyer_name   TEXT           PRIMARY KEY,
+    total_amount NUMERIC(18,2)  NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_analytics_buyers_amount ON analytics_buyers (total_amount DESC);
+
+CREATE TABLE IF NOT EXISTS analytics_suppliers (
+    supplier_name TEXT           PRIMARY KEY,
+    total_amount  NUMERIC(18,2)  NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_analytics_suppliers_amount ON analytics_suppliers (total_amount DESC);
+
+
+
+-- ============================================================
 -- Analytics queries (for reference / AnalyticsRepository)
 -- ============================================================
 

@@ -7,4 +7,5 @@ public interface IAnalyticsRepository
     Task<decimal> GetBudgetSavingsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<TopEntryDto>> GetTopBuyersAsync(CancellationToken ct = default);
     Task<IReadOnlyList<TopEntryDto>> GetTopSuppliersAsync(CancellationToken ct = default);
+    Task RefreshAsync(CancellationToken ct = default);
 }

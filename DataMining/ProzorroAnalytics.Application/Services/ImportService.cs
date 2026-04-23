@@ -12,16 +12,19 @@ public class ImportService : IImportService
     private readonly ILogger<ImportService> _logger;
     private readonly IProzorroApiClient _apiClient;
     private readonly IImportRepository _importRepository;
+    private readonly IAnalyticsRepository _analyticsRepository;
     private readonly FilterOptions _filterOptions;
 
     public ImportService(
         IProzorroApiClient apiClient,
         IImportRepository importRepository,
+        IAnalyticsRepository analyticsRepository,
         ILogger<ImportService> logger,
         FilterOptions filterOptions)
     {
         _apiClient = apiClient;
         _importRepository = importRepository;
+        _analyticsRepository = analyticsRepository;
         _logger = logger;
         _filterOptions = filterOptions;
     }
@@ -97,6 +100,7 @@ public class ImportService : IImportService
         }
 
         await _importRepository.UpdateSyncStateAsync(newestDate.Value, ct);
+        await _analyticsRepository.RefreshAsync(ct);
 
         _logger.LogInformation("Import complete. Persisted {Count} tenders.", totalPersisted);
     }
